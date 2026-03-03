@@ -1,0 +1,18 @@
+cd "/Users/stanislava/Documents/New project"
+
+cat > .gitignore <<'EOF'
+node_modules
+.next
+.vercel
+.env.local
+.env
+!.env.example
+.DS_Store
+npm-debug.log*
+EOF
+
+git add .
+git commit -m "Initial commit: Domashniy Angel MVP"
+
+git remote add origin https://github.com/stanislava2306-ctrl/domashniy-angel.git
+git push -u origin main
