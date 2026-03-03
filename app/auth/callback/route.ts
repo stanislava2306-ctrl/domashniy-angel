@@ -14,11 +14,11 @@ export async function GET(request: NextRequest) {
     return NextResponse.redirect(new URL("/login", request.url));
   }
 
-  let response = NextResponse.next({
-    request: {
-      headers: request.headers
-    }
-  });
+  const pendingCookies: Array<{
+    name: string;
+    value: string;
+    options: CookieOptions;
+  }> = [];
 
   const supabase = createServerClient(supabaseUrl, supabaseAnonKey, {
     cookies: {
@@ -26,10 +26,14 @@ export async function GET(request: NextRequest) {
         return request.cookies.get(name)?.value;
       },
       set(name: string, value: string, options: CookieOptions) {
-        response.cookies.set({ name, value, ...options });
+        pendingCookies.push({ name, value, options });
       },
       remove(name: string, options: CookieOptions) {
-        response.cookies.set({ name, value: "", ...options, maxAge: 0 });
+        pendingCookies.push({
+          name,
+          value: "",
+          options: { ...options, maxAge: 0 }
+        });
       }
     }
   });
@@ -72,8 +76,17 @@ export async function GET(request: NextRequest) {
     target = requestedNext;
   }
 
+  const response = NextResponse.redirect(new URL(target, request.url));
+
+  for (const cookie of pendingCookies) {
+    response.cookies.set({
+      name: cookie.name,
+      value: cookie.value,
+      ...cookie.options
+    });
+  }
+
   response.cookies.set({ name: "role_hint", value: "", path: "/", maxAge: 0 });
-  response = NextResponse.redirect(new URL(target, request.url), { headers: response.headers });
 
   return response;
 }
